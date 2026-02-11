@@ -253,8 +253,8 @@
     // --- CONFIGURACIÓN DE IMÁGENES ---
     const totalImages = 6; // <--- CORREGIDO: Tienes 6 fotos en la carpeta
     const imageChangeInterval = 60000; // 1 minuto
-    let currentImgIndex = 1;
-
+    // Empieza en un número aleatorio entre 0 y el total de imágenes
+    let currentImgIndex = Math.floor(Math.random() * totalImages);
     // --- ESTADO INICIAL ---
     const defaultData = {
       "Mañana ☀️": [{ text: "Medicación", done: false }, { text: "Llaves", done: false }],
