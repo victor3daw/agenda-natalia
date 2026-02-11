@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mi Día</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/clouds/100/000000/todo-list.png">
+
+  <style>
+    :root {
+      --glass: rgba(255, 255, 255, 0.85);
+      --glass-strong: rgba(255, 255, 255, 0.95);
+      --primary: #6c5ce7;
+      --danger: #ff7675;
+      --text: #2d3436;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--text);
+      transition: background-image 1s ease-in-out;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      /* Fondo por defecto si no cargan las imágenes */
+      background-color: #dfe6e9;
+    }
+
+    /* Overlay para mejorar lectura si la foto es clara */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.2);
+      z-index: -1;
+    }
+
+    header {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      background: var(--glass);
+      padding: 10px 20px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* TABS (Categorías) */
+    .tabs-wrapper {
+      width: 100%;
+      max-width: 500px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 10px;
+      scrollbar-width: none;
+    }
+
+    .tab {
+      padding: 8px 16px;
+      background: var(--glass);
+      border: none;
+      border-radius: 15px;
+      font-weight: 600;
+      color: #636e72;
+      white-space: nowrap;
+      transition: all 0.3s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .delete-tab-btn {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--danger);
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+      display: none;
+      /* Se muestra en modo edición */
+      border: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* LISTA DE TAREAS */
+    .checklist {
+      width: 100%;
+      max-width: 500px;
+      padding-bottom: 80px;
+      /* Espacio para botón reset */
+    }
+
+    .item {
+      background: var(--glass-strong);
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .item input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin-right: 15px;
+      accent-color: var(--primary);
+    }
+
+    .item span {
+      flex-grow: 1;
+      font-size: 1rem;
+    }
+
+    .item.checked span {
+      text-decoration: line-through;
+      color: #b2bec3;
+    }
+
+    .delete-item-btn {
+      color: var(--danger);
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      margin-left: 10px;
+      display: none;
+    }
+
+    /* MODO EDICIÓN */
+    body.edit-mode .delete-tab-btn,
+    body.edit-mode .delete-item-btn,
+    body.edit-mode .add-controls {
+      display: flex;
+    }
+
+    .add-controls {
+      display: none;
+      margin-top: 10px;
+      gap: 5px;
+    }
+
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+    }
+
+    .btn-add {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 15px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+
+    .reset-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--glass-strong);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Hola guapa! <br> Acuerdate de esto ❤️</h1>
+    <button class="btn-icon" onclick="toggleEditMode()">⚙️</button>
+  </header>
+
+  <div class="tabs-wrapper" id="tabs-container"></div>
+
+  <div class="add-controls" style="max-width: 500px; width: 100%; margin-bottom: 20px;">
+    <input type="text" id="new-list-input" placeholder="Nueva lista (ej: Viajes)...">
+    <button class="btn-add" onclick="addList()">+</button>
+  </div>
+
+  <div class="checklist" id="checklist-container"></div>
+
+  <div class="add-controls" id="task-add-controls" style="max-width: 500px; width: 100%;">
+    <input type="text" id="new-task-input" placeholder="Nueva tarea...">
+    <button class="btn-add" onclick="addTask()">+</button>
+  </div>
+
+  <button class="reset-btn" onclick="resetDay()">Empezar nuevo día ✨</button>
+
+  <script>
+    // --- CONFIGURACIÓN DE IMÁGENES ---
+    const totalImages = 6; // <--- CORREGIDO: Tienes 6 fotos en la carpeta
+    const imageChangeInterval = 60000; // 1 minuto
+    let currentImgIndex = 1;
+
+    // --- ESTADO INICIAL ---
+    const defaultData = {
+      "Mañana ☀️": [{ text: "Medicación", done: false }, { text: "Llaves", done: false }],
+      "Noche 🌙": [{ text: "Cerrar puerta", done: false }, { text: "Cargar móvil", done: false }]
+    };
+
+    let data = JSON.parse(localStorage.getItem('myDynamicPlanner')) || defaultData;
+    let currentTab = Object.keys(data)[0] || "";
+    let isEditMode = false;
+
+    // --- LÓGICA DE FONDO (CORREGIDA) ---
+    function changeBackground() {
+      // Calcula la siguiente foto
+      currentImgIndex = (currentImgIndex % totalImages) + 1;
+
+      // --- AQUÍ ESTABA EL ERROR ---
+      // Antes ponía: `images/${currentImgIndex}.jpg`
+      // Ahora ponemos: `images/fondo${currentImgIndex}.jpg` para que coincida con tus archivos
+      const imgUrl = `images/fondo${currentImgIndex}.jpg`;
+
+      // Precargar imagen
+      const img = new Image();
+      img.src = imgUrl;
+      img.onload = () => {
+        document.body.style.backgroundImage = `url('${imgUrl}')`;
+      };
+      img.onerror = () => {
+        console.error("No se encontró la imagen:", imgUrl);
+      };
+    }
+
+    // --- LÓGICA DE LA APP ---
+    function save() {
+      localStorage.setItem('myDynamicPlanner', JSON.stringify(data));
+      render();
+    }
+
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      document.body.classList.toggle('edit-mode', isEditMode);
+      const taskInput = document.getElementById('task-add-controls');
+      if (Object.keys(data).length === 0) taskInput.style.display = 'none';
+    }
+
+    function addList() {
+      const input = document.getElementById('new-list-input');
+      const name = input.value.trim();
+      if (name && !data[name]) {
+        data[name] = [];
+        currentTab = name;
+        input.value = '';
+        save();
+      } else if (data[name]) {
+        alert("Esa lista ya existe");
+      }
+    }
+
+    function deleteList(key) {
+      if (confirm(`¿Borrar la lista "${key}"?`)) {
+        delete data[key];
+        const keys = Object.keys(data);
+        currentTab = keys.length > 0 ? keys[0] : "";
+        save();
+      }
+    }
+
+    function addTask() {
+      if (!currentTab) return alert("Crea una lista primero");
+      const input = document.getElementById('new-task-input');
+      const text = input.value.trim();
+      if (text) {
+        data[currentTab].push({ text: text, done: false });
+        input.value = '';
+        save();
+      }
+    }
+
+    function toggleTask(index) {
+      if (isEditMode) return;
+      data[currentTab][index].done = !data[currentTab][index].done;
+      save();
+    }
+
+    function deleteTask(index) {
+      data[currentTab].splice(index, 1);
+      save();
+    }
+
+    function resetDay() {
+      if (confirm("¿Desmarcar todo para empezar de nuevo?")) {
+        Object.keys(data).forEach(key => {
+          data[key].forEach(item => item.done = false);
+        });
+        save();
+      }
+    }
+
+    function render() {
+      const tabsContainer = document.getElementById('tabs-container');
+      const listContainer = document.getElementById('checklist-container');
+
+      tabsContainer.innerHTML = '';
+      listContainer.innerHTML = '';
+
+      const keys = Object.keys(data);
+
+      if (keys.length > 0 && (!currentTab || !data[currentTab])) {
+        currentTab = keys[0];
+      }
+
+      // Render Tabs
+      keys.forEach(key => {
+        const btn = document.createElement('button');
+        btn.className = `tab ${key === currentTab ? 'active' : ''}`;
+        btn.innerHTML = `
+                    ${key}
+                    <button class="delete-tab-btn" onclick="event.stopPropagation(); deleteList('${key}')">×</button>
+                `;
+        btn.onclick = () => {
+          currentTab = key;
+          render();
+        };
+        tabsContainer.appendChild(btn);
+      });
+
+      // Render Items
+      if (currentTab && data[currentTab]) {
+        data[currentTab].forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = `item ${item.done ? 'checked' : ''}`;
+          div.innerHTML = `
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTask(${index})">
+                        <span>${item.text}</span>
+                        <button class="delete-item-btn" onclick="deleteTask(${index})">🗑️</button>
+                    `;
+          listContainer.appendChild(div);
+        });
+      }
+    }
+
+    // --- INICIALIZACIÓN ---
+    render();
+    changeBackground(); // Poner primer fondo
+    setInterval(changeBackground, imageChangeInterval); // Cambiar cada minuto
+
+  </script>
+</body>
+
+</html>
